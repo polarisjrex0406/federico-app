@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"sync"
 
-	"github.com/jessevdk/go-flags"
 	"github.com/joho/godotenv"
 )
 
@@ -19,11 +20,32 @@ func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
-	fp := flags.NewParser(&cfg, flags.Default)
-	// Parse flags
-	if _, err := fp.Parse(); err != nil {
-		return nil, err
+
+	// fp := flags.NewParser(&cfg, flags.Default)
+	// // Parse flags
+	// if _, err := fp.Parse(); err != nil {
+	// 	return nil, err
+	// }
+
+	serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+	if err != nil {
+		cfg.Server.Port = 8080
+	} else {
+		cfg.Server.Port = serverPort
 	}
+
+	cfg.Postgres.Host = os.Getenv("POSTGRES_HOST")
+	postgresPort, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
+	if err != nil {
+		cfg.Postgres.Port = 5432
+	} else {
+		cfg.Postgres.Port = postgresPort
+	}
+	cfg.Postgres.DBName = os.Getenv("POSTGRES_DB_NAME")
+	cfg.Postgres.User = os.Getenv("POSTGRES_USER")
+	cfg.Postgres.Password = os.Getenv("POSTGRES_PASSWORD")
+	cfg.Postgres.SSLMode = os.Getenv("POSTGRES_SSL_MODE")
+
 	return &cfg, nil
 }
 
@@ -44,15 +66,6 @@ type Config struct {
 
 	Server struct {
 		Port int `long:"server-port" env:"SERVER_PORT" default:"8080"`
-	}
-
-	JWT struct {
-		PrivateKey string `long:"jwt-private-key" env:"JWT_PRIVATE_KEY"`
-		Duration   struct {
-			AccessTokenInMin   int `long:"jwt-duration-access-token-in-min" env:"JWT_DURATION_ACCESS_TOKEN_IN_MIN" default:"15"`
-			RefreshTokenInHour int `long:"jwt-duration-refresh-token-in-hour" env:"JWT_DURATION_REFRESH_TOKEN_IN_HOUR" default:"24"`
-			KeepLogInDay       int `long:"jwt-duration-keep-log-in-day" env:"JWT_DURATION_KEEP_LOG_IN_DAY" default:"30"`
-		}
 	}
 
 	Postgres struct {

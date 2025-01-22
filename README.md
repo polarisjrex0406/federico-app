@@ -1,4 +1,6 @@
 # federico-app
 Test app for Federico L
 
-go run main.go --migrate true --seed true
+go run main.go
+
+go test ./... -v
