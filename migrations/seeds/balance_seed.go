@@ -13,10 +13,10 @@ func Balance(db *gorm.DB) error {
 
 	for _, user := range users {
 		balance := entities.Balance{
-			UserID: user.ID,
+			UserID: user.UserID,
 			Amount: 0,
 		}
-		if err := db.Create(&balance).Error; err != nil {
+		if err := db.Where("user_id = ?", user.UserID).Attrs(balance).FirstOrCreate(&balance).Error; err != nil {
 			return err
 		}
 	}

@@ -1,0 +1,92 @@
+definitions:
+  dto.UserDoTransactionRequest:
+    properties:
+      amount:
+        type: string
+      state:
+        type: string
+      transactionId:
+        type: string
+    type: object
+  utils.Response:
+    properties:
+      code:
+        example: "200.0"
+        type: string
+      data: {}
+      message:
+        example: success
+        type: string
+    type: object
+info:
+  contact:
+    email: support@example.com
+    name: API Support Team
+    url: http://example.com/support
+  description: A comprehensive API for test.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://example.com/terms
+  title: Federico App API
+  version: "1.0"
+paths:
+  /user/{userId}/balance:
+    get:
+      consumes:
+      - application/json
+      description: Gets current user balance
+      parameters:
+      - description: User identifier
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Gets current user balance
+      tags:
+      - User
+  /user/{userId}/transaction:
+    post:
+      consumes:
+      - application/json
+      description: Updates user balance
+      parameters:
+      - description: Data for transaction
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserDoTransactionRequest'
+      - description: User identifier
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Updates user balance
+      tags:
+      - User
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: JWT security accessToken. Please add it in the format "Bearer {AccessToken}"
+      to authorize your requests.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
