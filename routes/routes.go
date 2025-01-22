@@ -14,7 +14,7 @@ func SetupRouter(
 
 	userGroup := r.Group("/user")
 	{
-		userGroup.POST("/:userId/transaction", userHandler.DoTransaction)
+		userGroup.POST("/:userId/transaction", middleware.HeaderValidation(), middleware.UserDoTransactionValidation(), userHandler.DoTransaction)
 		userGroup.GET("/:userId/balance", userHandler.GetBalance)
 	}
 

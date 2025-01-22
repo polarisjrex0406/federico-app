@@ -24,7 +24,7 @@ type (
 
 	UserDoTransactionRequest struct {
 		State         string `json:"state" bind:"required"`
-		Amount        string `json:"amount" bind:"required"`
+		Amount        string `json:"amount" bind:"required,amount"`
 		TransactionID string `json:"transactionId" bind:"required"`
 	}
 )

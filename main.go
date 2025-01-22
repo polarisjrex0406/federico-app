@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/polarisjrex0406/federico-app/cmd"
 	"github.com/polarisjrex0406/federico-app/config"
 	"github.com/polarisjrex0406/federico-app/database"
@@ -12,6 +14,7 @@ import (
 	"github.com/polarisjrex0406/federico-app/repositories"
 	"github.com/polarisjrex0406/federico-app/routes"
 	"github.com/polarisjrex0406/federico-app/services"
+	"github.com/polarisjrex0406/federico-app/utils"
 	"gorm.io/gorm"
 
 	_ "github.com/polarisjrex0406/federico-app/docs"
@@ -41,6 +44,8 @@ func main() {
 		panic(err)
 	}
 
+	setupValidators()
+
 	database.Connect()
 
 	if !cmd.Commands(database.DB) {
@@ -69,4 +74,10 @@ func setupDependencyInjections(db *gorm.DB) handlers.UserHandler {
 	userHandler := handlers.NewUserHandler(userService)
 
 	return userHandler
+}
+
+func setupValidators() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("amount", utils.AmountValidator)
+	}
 }

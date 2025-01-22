@@ -10,8 +10,8 @@ import (
 
 type (
 	UserService interface {
-		GetBalance(userId uint) (*dto.UserGetBalanceResponse, error)
 		DoTransaction(userId uint, req dto.UserDoTransactionRequest) error
+		GetBalance(userId uint) (*dto.UserGetBalanceResponse, error)
 	}
 	userService struct {
 		balanceRepo     repositories.BalanceRepository
@@ -27,19 +27,6 @@ func NewUserService(
 		balanceRepo:     balanceRepo,
 		transactionRepo: transactionRepo,
 	}
-}
-
-func (s *userService) GetBalance(userId uint) (*dto.UserGetBalanceResponse, error) {
-	existingBalance, err := s.balanceRepo.FindOneByUserID(userId)
-	if err != nil {
-		return nil, dto.ErrFindOneBalanceByUserID
-	}
-
-	res := dto.UserGetBalanceResponse{
-		UserID:  existingBalance.UserID,
-		Balance: utils.Float64ToString(existingBalance.Amount),
-	}
-	return &res, nil
 }
 
 func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionRequest) error {
@@ -103,4 +90,17 @@ func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionReques
 	}
 
 	return nil
+}
+
+func (s *userService) GetBalance(userId uint) (*dto.UserGetBalanceResponse, error) {
+	existingBalance, err := s.balanceRepo.FindOneByUserID(userId)
+	if err != nil {
+		return nil, dto.ErrFindOneBalanceByUserID
+	}
+
+	res := dto.UserGetBalanceResponse{
+		UserID:  existingBalance.UserID,
+		Balance: utils.Float64ToString(existingBalance.Amount),
+	}
+	return &res, nil
 }

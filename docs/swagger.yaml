@@ -58,6 +58,11 @@ paths:
       - application/json
       description: Updates user balance
       parameters:
+      - description: Source type of the request
+        in: header
+        name: Source-type
+        required: true
+        type: string
       - description: Data for transaction
         in: body
         name: body

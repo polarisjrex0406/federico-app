@@ -31,6 +31,7 @@ func NewUserHandler(us services.UserService) UserHandler {
 // @Tags User
 // @Accept  json
 // @Produce  json
+// @Param Source-type header string true "Source type of the request"
 // @Param body body dto.UserDoTransactionRequest true "Data for transaction"
 // @Param userId path uint true "User identifier"
 // @Success 200 {object} utils.Response "Successful response"
@@ -43,14 +44,29 @@ func (h *userHandler) DoTransaction(c *gin.Context) { // Read the request body
 		utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_REQUEST_PATH_NOT_VALID, dto.MESSAGE_FAILED_GET_PATH_PARAM, nil)
 		return
 	}
-	// Get request body from context
-	var req dto.UserDoTransactionRequest
-	if err := c.ShouldBind(&req); err != nil {
+
+	// Retrieve the validated request from the context
+	validatedReq, exists := c.Get("validatedRequest")
+	if !exists {
 		utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_REQUEST_BODY_NOT_VALID, dto.MESSAGE_FAILED_GET_REQUEST_BODY, nil)
 		return
 	}
+	// Type assert the request to the expected type
+	assertedReq, ok := validatedReq.(dto.UserDoTransactionRequest)
+	if !ok {
+		utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_REQUEST_BODY_NOT_VALID, dto.MESSAGE_FAILED_GET_REQUEST_BODY, nil)
+		return
+	}
+
 	// Update user balance
-	if err := h.userService.DoTransaction(userId, req); err != nil {
+	if err := h.userService.DoTransaction(userId, assertedReq); err != nil {
+		if err == dto.ErrTransactionAlreadyExists {
+			utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_TRANSACTION_ALREADY_EXISTS, dto.MESSAGE_FAILED_USER_DO_TRANSACTION, nil)
+			return
+		} else if err == dto.ErrNotEnoughBalance {
+			utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_BALANCE_NOT_ENOUGH, dto.MESSAGE_FAILED_USER_DO_TRANSACTION, nil)
+			return
+		}
 		utils.SendResponseFailure(c, http.StatusInternalServerError, dto.CODE_FAILED_INTERNAL_PROCESS, dto.MESSAGE_FAILED_USER_DO_TRANSACTION, nil)
 		return
 	}

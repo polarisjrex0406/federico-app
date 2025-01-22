@@ -71,6 +71,13 @@ const docTemplate = `{
                 "summary": "Updates user balance",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Source type of the request",
+                        "name": "Source-type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Data for transaction",
                         "name": "body",
                         "in": "body",
