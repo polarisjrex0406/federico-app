@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/polarisjrex0406/federico-app/dto"
@@ -31,7 +32,14 @@ func HeaderValidation() gin.HandlerFunc {
 func UserDoTransactionValidation() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req dto.UserDoTransactionRequest
+
 		if err := c.ShouldBindJSON(&req); err != nil {
+			utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_REQUEST_BODY_NOT_VALID, dto.MESSAGE_FAILED_GET_REQUEST_BODY, nil)
+			return
+		}
+
+		// Validate amount
+		if !regexp.MustCompile(`^\d+(\.\d{1,2})?$`).MatchString(req.Amount) {
 			utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_REQUEST_BODY_NOT_VALID, dto.MESSAGE_FAILED_GET_REQUEST_BODY, nil)
 			return
 		}

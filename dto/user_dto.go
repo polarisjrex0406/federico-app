@@ -27,4 +27,8 @@ type (
 		Amount        string `json:"amount" bind:"required,amount"`
 		TransactionID string `json:"transactionId" bind:"required"`
 	}
+	UserDoTransactionResponse struct {
+		UserID  uint   `json:"userId" bind:"required"`
+		Balance string `json:"balance" bind:"required"`
+	}
 )

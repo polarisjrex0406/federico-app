@@ -10,7 +10,7 @@ import (
 
 type (
 	UserService interface {
-		DoTransaction(userId uint, req dto.UserDoTransactionRequest) error
+		DoTransaction(userId uint, req dto.UserDoTransactionRequest) (*dto.UserDoTransactionResponse, error)
 		GetBalance(userId uint) (*dto.UserGetBalanceResponse, error)
 	}
 	userService struct {
@@ -29,32 +29,32 @@ func NewUserService(
 	}
 }
 
-func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionRequest) error {
+func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionRequest) (*dto.UserDoTransactionResponse, error) {
 	_, err := s.transactionRepo.FindOneByTransactionID(req.TransactionID)
 	if err == nil {
-		return dto.ErrTransactionAlreadyExists
+		return nil, dto.ErrTransactionAlreadyExists
 	}
 	if err != gorm.ErrRecordNotFound {
-		return dto.ErrFindOneTransactionByTransactionID
+		return nil, dto.ErrFindOneTransactionByTransactionID
 	}
 
 	existingBalance, err := s.balanceRepo.FindOneByUserID(userId)
 	if err != nil {
-		return dto.ErrFindOneBalanceByUserID
+		return nil, dto.ErrFindOneBalanceByUserID
 	}
 
 	amount, err := utils.StringToFloat64(req.Amount)
 	if err != nil {
-		return dto.ErrConvertStringToFloat64
+		return nil, dto.ErrConvertStringToFloat64
 	}
 	if req.State == "loss" && existingBalance.Amount < amount {
-		return dto.ErrNotEnoughBalance
+		return nil, dto.ErrNotEnoughBalance
 	}
 
 	// Begin transaction
 	tx := s.balanceRepo.BeginTx()
 	if tx.Error != nil {
-		return dto.ErrBeginDBTx
+		return nil, dto.ErrBeginDBTx
 	}
 	// Rollback when panic
 	defer func() {
@@ -67,9 +67,10 @@ func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionReques
 	if req.State == "loss" {
 		amount *= -1
 	}
-	if _, err = s.balanceRepo.UpdateOneByUserID(tx, userId, amount); err != nil {
+	updatedBalance, err := s.balanceRepo.UpdateOneByUserID(tx, userId, amount)
+	if err != nil {
 		tx.Rollback()
-		return dto.ErrUpdateOneBalanceByUserID
+		return nil, dto.ErrUpdateOneBalanceByUserID
 	}
 
 	// Create transaction
@@ -81,15 +82,20 @@ func (s *userService) DoTransaction(userId uint, req dto.UserDoTransactionReques
 	}
 	if err = s.transactionRepo.Create(tx, &newTransaction); err != nil {
 		tx.Rollback()
-		return dto.ErrCreateTransaction
+		return nil, dto.ErrCreateTransaction
 	}
 
 	// Commit transaction
 	if tx.Commit().Error != nil {
-		return dto.ErrCommitDBTx
+		return nil, dto.ErrCommitDBTx
 	}
 
-	return nil
+	res := dto.UserDoTransactionResponse{
+		UserID:  updatedBalance.UserID,
+		Balance: utils.Float64ToString(updatedBalance.Amount),
+	}
+
+	return &res, nil
 }
 
 func (s *userService) GetBalance(userId uint) (*dto.UserGetBalanceResponse, error) {

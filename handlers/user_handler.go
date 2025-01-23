@@ -59,7 +59,8 @@ func (h *userHandler) DoTransaction(c *gin.Context) { // Read the request body
 	}
 
 	// Update user balance
-	if err := h.userService.DoTransaction(userId, assertedReq); err != nil {
+	res, err := h.userService.DoTransaction(userId, assertedReq)
+	if err != nil {
 		if err == dto.ErrTransactionAlreadyExists {
 			utils.SendResponseFailure(c, http.StatusBadRequest, dto.CODE_FAILED_TRANSACTION_ALREADY_EXISTS, dto.MESSAGE_FAILED_USER_DO_TRANSACTION, nil)
 			return
@@ -71,7 +72,7 @@ func (h *userHandler) DoTransaction(c *gin.Context) { // Read the request body
 		return
 	}
 	// Return success response
-	utils.SendResponseSuccess(c, http.StatusOK, dto.CODE_SUCCESS, dto.MESSAGE_SUCCESS_USER_DO_TRANSACTION, nil)
+	utils.SendResponseSuccess(c, http.StatusOK, dto.CODE_SUCCESS, dto.MESSAGE_SUCCESS_USER_DO_TRANSACTION, *res)
 }
 
 // @Summary Gets current user balance
