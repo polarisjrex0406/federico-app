@@ -29,7 +29,7 @@ func LoadConfig() (*Config, error) {
 
 	serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
 	if err != nil {
-		cfg.Server.Port = 8080
+		cfg.Server.Port = 8089
 	} else {
 		cfg.Server.Port = serverPort
 	}
